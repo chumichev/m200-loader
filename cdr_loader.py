@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
+
+import argparse
 import logging
 import queue
 from m200_collector import M200Collector
 from multiprocessing import Queue
 
 
-def main():
+def start_cdr_collection(host: str, port: int) -> None:
     cdr_queue = Queue()
-    online_collector = M200Collector(host='10.90.254.115', port=20002, output_queue=cdr_queue)
+    online_collector = M200Collector(host=host, port=port, output_queue=cdr_queue)
     online_collector.start()
 
     while online_collector.is_alive():
@@ -23,4 +25,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+
+    # Запуск (пример): cdr_loader.py --host 192.168.0.100 --port 20002
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', type=str, required=True, help='IP-адрес хоста с запущенным SMPCallBuilder')
+    parser.add_argument('--port', type=int, required=True, help='Порт SMPCallBuilder')
+    args = parser.parse_args()
+
+    start_cdr_collection(host=args.host, port=args.port)
