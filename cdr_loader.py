@@ -19,7 +19,7 @@ def start_cdr_collection(host: str, port: int) -> None:
         except queue.Empty:
             # Здесь ничего не нужно делать. Очередь пустая? - проверяем жив ли процесс коллектор.
             # Если жив, то снова ждём очередь и так по кругу. Если коллектор умер, то завершаем приложение
-            pass
+            continue
 
     online_collector.join()
 
