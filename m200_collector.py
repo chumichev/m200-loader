@@ -2,6 +2,7 @@
 
 import socket
 import logging
+import sys
 from multiprocessing import Process, Queue
 from time import sleep
 
@@ -28,7 +29,8 @@ class M200Collector(Process):
             host, port = self.__m200_address
             message = f"Cannot open connection to {host}:{port} - {exc}"
             logging.critical(message)
-            raise IOError(message)
+            sys.exit()
+            # TODO: Разобраться с завершением процесса
 
     def run(self) -> None:
         self.connect()
