@@ -20,20 +20,18 @@ class M200Collector(Process):
         self.__connected = False
         self.__reconnect_timeout = reconnect_timeout
 
-    def connect(self):
-        try:
-            self.__tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.__tcp_socket.connect(self.__m200_address)
-            self.__connected = True
-        except socket.error as exc:
-            host, port = self.__m200_address
-            message = f"Cannot open connection to {host}:{port} - {exc}"
-            logging.critical(message)
-            sys.exit()
-            # TODO: Разобраться с завершением процесса
+    def __connect(self):
+        self.__tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__tcp_socket.connect(self.__m200_address)
+        self.__connected = True
 
     def run(self) -> None:
-        self.connect()
+        try:
+            self.__connect()
+        except socket.error:
+            logging.exception(f"Error while connecting to {self.__m200_address}")
+            return
+
         while True:
             try:
                 data = self.__tcp_socket.recv(self.__buffer_size)
