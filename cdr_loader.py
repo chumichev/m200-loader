@@ -1,36 +1,37 @@
 # -*- coding: utf-8 -*-
 
-import argparse
+import settings
 import logging
 import queue
 from m200_collector import M200Collector
 from multiprocessing import Queue
 
+cdr_collectors = []
 
-def start_cdr_collection(host: str, port: int) -> None:
+
+def main() -> None:
     cdr_queue = Queue()
-    online_collector = M200Collector(host=host, port=port, output_queue=cdr_queue)
-    online_collector.start()
+    # создаём коллектор для каждой АТС
+    for host, port, collector_id in settings.collectors:
+        online_collector = M200Collector(host=host, port=port, output_queue=cdr_queue, collector_id=collector_id)
+        cdr_collectors.append(online_collector)
 
-    while online_collector.is_alive():
+    for collector in cdr_collectors:
+        collector.start()
+
+    while any([collector.is_alive() for collector in cdr_collectors]):
         try:
             cdr = cdr_queue.get(timeout=1)
             print(cdr)
         except queue.Empty:
-            # Здесь ничего не нужно делать. Очередь пустая? - проверяем жив ли процесс коллектор.
-            # Если жив, то снова ждём очередь и так по кругу. Если коллектор умер, то завершаем приложение
+            # Здесь ничего не нужно делать. Очередь пустая? - проверяем жив ли хотя бы один коллектор.
+            # Если хотя бы один жив, то снова ждём очередь и так по кругу.
             continue
 
-    online_collector.join()
+    # Если ни одного коллектора не осталось - синхронизируемся и завершаем работу
+    for collector in cdr_collectors:
+        collector.join()
 
 
 if __name__ == '__main__':
-
-    # Запуск (пример): cdr_loader.py --host 192.168.0.100 --port 20002
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--host', type=str, required=True, help='IP-адрес хоста с запущенным SMPCallBuilder')
-    parser.add_argument('--port', type=int, required=True, help='Порт SMPCallBuilder')
-    args = parser.parse_args()
-
-    start_cdr_collection(host=args.host, port=args.port)
+    main()
