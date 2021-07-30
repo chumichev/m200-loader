@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import settings
 import logging
 import queue
+import sys
 from m200_collector import M200Collector
 from multiprocessing import Queue
+
+try:
+    import settings
+except ImportError:
+    logging.error('Не найден файл settings.py\nВыполните mv settings.default.py settings.py и проверьте конфигурацию')
+    sys.exit(1)
 
 cdr_collectors = []
 

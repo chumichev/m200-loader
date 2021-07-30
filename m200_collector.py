@@ -69,3 +69,6 @@ class M200Collector(Process):
                     except socket.error:
                         # ждём таймаут и снова пытаемся переподключиться
                         sleep(self._reconnect_timeout)
+            except Exception:
+                logging.exception(f"[{self.id}] Unexpected error occurred!")
+                continue
