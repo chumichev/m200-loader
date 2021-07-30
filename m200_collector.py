@@ -37,14 +37,14 @@ class M200Collector(Process):
         self._setup_socket()
         self._tcp_socket.connect(self._m200_address)
         self._connected = True
-        logging.info(f"[{self.id}] Connected!")
+        logging.info(f"[{self.id}] PID {self.pid} Connected!")
 
     def run(self) -> None:
         try:
             self._connect()
         except socket.error:
-            logging.exception(f"[{self.id}] Error while connecting to {self._m200_address}")
-            sys.exit(0)
+            logging.exception(f"[{self.id}] PID {self.pid} Error while connecting to {self._m200_address}")
+            sys.exit(1)
 
         while True:
             try:
@@ -64,11 +64,11 @@ class M200Collector(Process):
                         self._setup_socket()
                         self._tcp_socket.connect(self._m200_address)
                         self._connected = True
-                        message = f"[{self.id}] Reconnected to {host}:{port} successfully!"
+                        message = f"[{self.id}] PID {self.pid} Reconnected to {host}:{port} successfully!"
                         logging.debug(message)
                     except socket.error:
                         # ждём таймаут и снова пытаемся переподключиться
                         sleep(self._reconnect_timeout)
             except Exception:
-                logging.exception(f"[{self.id}] Unexpected error occurred!")
+                logging.exception(f"[{self.id}] PID {self.pid} Unexpected error occurred!")
                 continue

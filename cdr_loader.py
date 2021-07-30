@@ -4,6 +4,7 @@ import logging
 import queue
 import sys
 from m200_collector import M200Collector
+from cdr_worker import CDR, BillingError
 from multiprocessing import Queue
 
 try:
@@ -27,11 +28,18 @@ def main() -> None:
 
     while any([collector.is_alive() for collector in cdr_collectors]):
         try:
-            cdr = cdr_queue.get(timeout=1)
-            print(cdr)
+            collector_id, cdr = cdr_queue.get(timeout=1)
+            cdr_object = CDR(raw_cdr=cdr)
+            data = cdr_object.parse_raw_cdr()
+            print(collector_id, data)
         except queue.Empty:
             # Здесь ничего не нужно делать. Очередь пустая? - проверяем жив ли хотя бы один коллектор.
             # Если хотя бы один жив, то снова ждём очередь и так по кругу.
+            continue
+        except BillingError as exc:
+            logging.error(exc.err_message)
+            # TODO: Строку с ошибкой записать отдельно от остальных
+            # print(exc.raw_cdr)
             continue
 
     # Если ни одного коллектора не осталось - синхронизируемся и завершаем работу
