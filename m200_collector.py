@@ -44,6 +44,7 @@ class M200Collector(Process):
             self._connect()
         except socket.error:
             logging.exception(f"[{self.id}] PID {self.pid} Error while connecting to {self._m200_address}")
+            self._tcp_socket.close()
             sys.exit(1)
 
         while True:
@@ -69,6 +70,9 @@ class M200Collector(Process):
                     except socket.error:
                         # ждём таймаут и снова пытаемся переподключиться
                         sleep(self._reconnect_timeout)
+            except KeyboardInterrupt:
+                self._tcp_socket.close()
+                sys.exit(1)
             except Exception:
                 logging.exception(f"[{self.id}] PID {self.pid} Unexpected error occurred!")
                 continue

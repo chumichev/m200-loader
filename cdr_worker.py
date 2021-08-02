@@ -42,7 +42,7 @@ class CDR:
 
     def _parse_raw_cdr(self):
         # TODO: Вынести это в параметры коллектора
-        tz = pytz.timezone('Europe/Moscow')
+        current_tz = 'Europe/Moscow'
 
         call_length, end_cause = '0', '0'
         call_length_total = None
@@ -51,11 +51,11 @@ class CDR:
             if len(call_data) == 8:
                 # формат МР-16 и К86 (без полной продолжительности звонка и преобразованных номеров)
                 self.cg_trunk, self.cg_num, self.cd_trunk, self.cd_num, self.raw_date, self.raw_time, \
-                call_length, end_cause = call_data
+                    call_length, end_cause = call_data
             elif len(call_data) == 11:
                 # формат СС
                 self.cg_trunk, self.cg_num, self.cd_num, self.cd_trunk, self.cg_num_t, self.cd_num_t, self.raw_date, \
-                self.raw_time, call_length_total, call_length, end_cause = call_data
+                    self.raw_time, call_length_total, call_length, end_cause = call_data
 
             if call_length_total:
                 self.call_length_total = int(call_length_total)
@@ -64,23 +64,10 @@ class CDR:
             self.end_cause = int(end_cause)
             c_time = datetime.strptime(self.raw_time, '%H:%M:%S')
             c_date = datetime.strptime(self.raw_date, '%d-%m-%y')
-            self.c_start_moment = datetime(year=c_date.year, month=c_date.month, day=c_date.day,
-                                           hour=c_time.hour, minute=c_time.minute, second=c_time.second, tzinfo=tz)
-            # self._cdr_data = {
-            #     'cg_trunk': self.cg_trunk,
-            #     'aon': self.cg_num,
-            #     'aon_t': self.cg_num_t,
-            #     'cd_trunk': self.cd_trunk,
-            #     'called_number': self.cd_num,
-            #     'number_t': self.cd_num_t,
-            #     'c_start_moment': self.c_start_moment,
-            #     'call_length_total': self.call_length_total,
-            #     'call_length': self.call_length,
-            #     'end_cause': self.end_cause,
-            #     'src_hash': abs(hash(self._raw_cdr)),
-            #     'src_string': self._raw_cdr,
-            #     'cdr_source': self._cdr_source,
-            # }
+            self.c_start_moment = pytz.timezone(current_tz).localize(
+                datetime(year=c_date.year, month=c_date.month, day=c_date.day,
+                         hour=c_time.hour, minute=c_time.minute, second=c_time.second),
+                is_dst=None)
 
             self._cdr_data = (
                 self.cg_trunk,
