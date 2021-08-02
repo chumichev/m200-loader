@@ -3,6 +3,7 @@
 import logging
 import queue
 import sys
+import psycopg2
 from m200_collector import M200Collector
 from cdr_worker import CDR, BillingError
 from multiprocessing import Queue
@@ -16,7 +17,21 @@ except ImportError:
 cdr_collectors = []
 
 
+def get_db_connection():
+    try:
+        dsn = f"host={settings.db_host} " \
+              f"user={settings.db_user} " \
+              f"password={settings.db_password} " \
+              f"dbname={settings.db_name}"
+        conn = psycopg2.connect(dsn=dsn)
+        return conn
+    except psycopg2.DatabaseError:
+        logging.exception('Ошибка подключения к базе данных')
+        sys.exit(1)
+
+
 def main() -> None:
+    db_connection = get_db_connection()
     cdr_queue = Queue()
     # создаём коллектор для каждой АТС
     for host, port, collector_id in settings.collectors:
@@ -29,9 +44,9 @@ def main() -> None:
     while any([collector.is_alive() for collector in cdr_collectors]):
         try:
             collector_id, cdr = cdr_queue.get(timeout=1)
-            cdr_object = CDR(raw_cdr=cdr)
-            data = cdr_object.parse_raw_cdr()
-            print(collector_id, data)
+            cdr_object = CDR(raw_cdr=cdr, db=db_connection, src=collector_id)
+            cdr_object.save_to_db()
+            print(f"{collector_id}\t{cdr}")
         except queue.Empty:
             # Здесь ничего не нужно делать. Очередь пустая? - проверяем жив ли хотя бы один коллектор.
             # Если хотя бы один жив, то снова ждём очередь и так по кругу.

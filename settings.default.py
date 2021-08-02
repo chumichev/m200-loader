@@ -11,3 +11,9 @@ SERVICE_LOG = 'cdr_loader.log'
 collectors = [
     # ('192.168.0.100', 20002, 'm200'),
 ]
+
+# ======== База данных =========
+db_host = 'localhost'
+db_name = 'm200'
+db_user = 'postgres'
+db_password = 'your_secure_password_here'
