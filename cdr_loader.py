@@ -56,6 +56,10 @@ def main() -> None:
             # TODO: Строку с ошибкой записать отдельно от остальных
             # print(exc.raw_cdr)
             continue
+        except KeyboardInterrupt:
+            for collector in cdr_collectors:
+                collector.terminate()
+            break
 
     # Если ни одного коллектора не осталось - синхронизируемся и завершаем работу
     for collector in cdr_collectors:
