@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-import time
 from datetime import datetime
-import psycopg2
 import pytz
 
 
@@ -25,7 +23,7 @@ class UnexpectedBillingError(BillingError):
 class CDR:
 
     def __init__(self, raw_cdr: str, src: str, db) -> None:
-        self._raw_cdr = raw_cdr
+        self._raw_cdr = raw_cdr.lstrip('\x02')
         # self._logger = logger
         self.cg_trunk = str
         self.cg_num = str
