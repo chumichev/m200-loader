@@ -1,3 +1,4 @@
 venv
 *.log
 settings.py
+cdr_files

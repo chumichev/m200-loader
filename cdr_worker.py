@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+import time
 from datetime import datetime
 import psycopg2
 import pytz
@@ -7,16 +9,17 @@ import pytz
 # специальный класс исключений для проброса ошибок тарификации по стеку
 class BillingError(Exception):
 
-    def __init__(self, err_code: int, raw_cdr: str, err_message=''):
+    def __init__(self, err_code: int, raw_cdr: str, collector_id='', err_message=''):
         self.err_code = err_code
         self.err_message = err_message
         self.raw_cdr = raw_cdr
+        self.collector_id = collector_id
 
 
 class UnexpectedBillingError(BillingError):
 
-    def __init__(self, raw_cdr, message):
-        super().__init__(err_code=6, raw_cdr=raw_cdr, err_message=message)
+    def __init__(self, raw_cdr, collector_id, message):
+        super().__init__(err_code=6, raw_cdr=raw_cdr, collector_id=collector_id, err_message=message)
 
 
 class CDR:
@@ -88,7 +91,11 @@ class CDR:
         except (IndexError, ValueError) as exc:
             message = f'Неверный формат строки "{self._raw_cdr}": {exc}'
             # self._logger.error(message)
-            raise UnexpectedBillingError(raw_cdr=self._raw_cdr, message=message)
+            raise UnexpectedBillingError(raw_cdr=self._raw_cdr, message=message, collector_id=self._cdr_source)
+        except Exception as exc:
+            message = f'Непредвиденная ошибка при обработке строки "{self._raw_cdr}": {exc}'
+            # self._logger.error(message)
+            raise UnexpectedBillingError(raw_cdr=self._raw_cdr, message=message, collector_id=self._cdr_source)
 
     def save_to_db(self):
         self._parse_raw_cdr()
@@ -101,5 +108,6 @@ class CDR:
             self.db_conn.commit()
         except Exception as exc:
             message = f'Ошибка записи в БД: "{self._raw_cdr}": {exc}'
+            logging.exception(message)
             # self._logger.error(message)
-            raise UnexpectedBillingError(raw_cdr=self._raw_cdr, message=message)
+            raise UnexpectedBillingError(raw_cdr=self._raw_cdr, message=message, collector_id=self._cdr_source)
