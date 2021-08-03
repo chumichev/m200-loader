@@ -36,14 +36,15 @@ class M200Collector(Process):
         self._setup_socket()
         self._tcp_socket.connect(self._m200_address)
         self._connected = True
-        print(f"[{self.id}] PID {self.pid} Connected!")
+        print(f"[{self.id}] {self._m200_address} PID {self.pid} Connected!")
         logging.info(f"[{self.id}] PID {self.pid} Connected!")
 
     def run(self) -> None:
         try:
             self._connect()
         except socket.error:
-            logging.exception(f"[{self.id}] PID {self.pid} Error while connecting to {self._m200_address}")
+            logging.exception(f"[{self.id}] {self._m200_address} PID {self.pid} "
+                              f"Error while connecting to {self._m200_address}")
             self._tcp_socket.close()
             self.terminate()
 
@@ -72,7 +73,7 @@ class M200Collector(Process):
                         sleep(self._reconnect_timeout)
             except KeyboardInterrupt:
                 self._tcp_socket.close()
-                print(f"[{self.id}] PID {self.pid} Connection closed")
+                print(f"[{self.id}] {self._m200_address} PID {self.pid} Connection closed")
                 self.terminate()
             except Exception:
                 logging.exception(f"[{self.id}] PID {self.pid} Unexpected error occurred!")
