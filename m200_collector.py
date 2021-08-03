@@ -2,7 +2,6 @@
 
 import socket
 import logging
-import sys
 from multiprocessing import Process, Queue
 from time import sleep
 
@@ -37,6 +36,7 @@ class M200Collector(Process):
         self._setup_socket()
         self._tcp_socket.connect(self._m200_address)
         self._connected = True
+        print(f"[{self.id}] PID {self.pid} Connected!")
         logging.info(f"[{self.id}] PID {self.pid} Connected!")
 
     def run(self) -> None:
@@ -45,7 +45,7 @@ class M200Collector(Process):
         except socket.error:
             logging.exception(f"[{self.id}] PID {self.pid} Error while connecting to {self._m200_address}")
             self._tcp_socket.close()
-            sys.exit(1)
+            self.terminate()
 
         while True:
             try:
@@ -72,7 +72,8 @@ class M200Collector(Process):
                         sleep(self._reconnect_timeout)
             except KeyboardInterrupt:
                 self._tcp_socket.close()
-                sys.exit(1)
+                print(f"[{self.id}] PID {self.pid} Connection closed")
+                self.terminate()
             except Exception:
                 logging.exception(f"[{self.id}] PID {self.pid} Unexpected error occurred!")
                 continue
