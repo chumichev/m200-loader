@@ -35,6 +35,7 @@ class M200Collector(Process):
         """
         self._setup_socket()
         self._tcp_socket.connect(self._m200_address)
+        self._tcp_socket.settimeout(None)
         self._connected = True
         print(f"[{self.id}] {self._m200_address} PID {self.pid} Connected!")
         logging.info(f"[{self.id}] PID {self.pid} Connected!")
@@ -65,6 +66,7 @@ class M200Collector(Process):
                     try:
                         self._setup_socket()
                         self._tcp_socket.connect(self._m200_address)
+                        self._tcp_socket.settimeout(None)
                         self._connected = True
                         message = f"[{self.id}] PID {self.pid} Reconnected to {host}:{port} successfully!"
                         logging.debug(message)
