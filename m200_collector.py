@@ -28,6 +28,16 @@ class M200Collector(Process):
         """
         self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._tcp_socket.settimeout(self.CONNECTION_TIMEOUT)
+        if hasattr(socket, 'SO_KEEPALIVE'):
+            # включение функционала tcp keepalive чтобы соединение не закрывалось
+            # по причине долгого отсутствия данных по ночам
+            self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        if hasattr(socket, 'TCP_KEEPIDLE'):
+            # шлёт keepalive после 20 секунд бездействия
+            self._tcp_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 20)
+        if hasattr(socket, 'TCP_KEEPINTVL'):
+            # интервал отправки keepalive 5 секунд
+            self._tcp_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5)
 
     def _connect(self) -> None:
         """
@@ -37,7 +47,7 @@ class M200Collector(Process):
         self._tcp_socket.connect(self._m200_address)
         self._tcp_socket.settimeout(None)
         self._connected = True
-        print(f"[{self.id}] {self._m200_address} PID {self.pid} Connected!")
+        print(f"[{self.id}] {self._m200_address} PID {self.pid} Connected!", flush=True)
         logging.info(f"[{self.id}] PID {self.pid} Connected!")
 
     def run(self) -> None:
