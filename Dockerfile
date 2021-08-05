@@ -11,5 +11,3 @@ RUN \
   apk --purge del .build-deps
 
 COPY . .
-
-CMD ["python", "./cdr_loader.py"]

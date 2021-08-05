@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+  cdr-loader:
+    build: ./
+    command:
+      - python ./cdr_loader.py
+    depends_on:
+      - pg_sql
+
+  pg_sql:
+    build: db/
+    ports:
+      - "5432:5432"
+
