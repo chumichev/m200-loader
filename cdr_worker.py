@@ -105,6 +105,7 @@ class CDR:
             cursor.execute(sql, self._cdr_data)
             self.db_conn.commit()
         except Exception as exc:
+            self.db_conn.rollback()
             message = f'Ошибка записи в БД: "{self._raw_cdr}": {exc}'
             logging.exception(message)
             # self._logger.error(message)
